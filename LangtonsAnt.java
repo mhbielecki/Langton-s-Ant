@@ -13,40 +13,49 @@ import java.awt.event.*;
 
 public class LangtonsAnt {
     public static void main(String[] args) {
-        Main m = new Main();
-        m.start();
+        final int DIM = 80;
+        SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    AntGUI g = new AntGUI(DIM);
+                }
+        });
     }
 }
 
 class Main {
 
-    int dim = 80;
-    AntGUI g = new AntGUI(dim);
-    Ant a = new Ant('u', dim);
+    Ant a;
+    AntGUI g;
+    int dim;
 
-    public void start() {
+    public Main(AntGUI gui, int d) {
+        g = gui;
+        dim = d;
+        a = new Ant('r', dim);
+    }
+
+    public void startAnt() {
 
         //place ant on starting square
-        g.updateSquareColor(a.getXPos(), a.getYPos());
+        g.updateSquareColor(a.getXPos(), a.getYPos(), Color.BLACK);
         Color c;
+        int x, y;
 
         /** main loop */
         while (true) {
             try {
-                //TODO Get rid of this. Not good practice to catch runtime exceptions like these
-                try {
-                     c = g.getSquareColor(a.getXPos(), a.getYPos());
-                } catch (ArrayIndexOutOfBoundsException e) {
-                    break;
-                }
-
-                g.updateSquareColor(a.getXPos(), a.getYPos());
+                x = a.getXPos();
+                y = a.getYPos();
+                c = g.getSquareColor(x, y);
+                g.setTempColor(x, y);
+                Thread.currentThread().sleep(10);
                 a.move(c);
+                g.updateSquareColor(x, y, c); //WHITE / BLACK
                 Thread.currentThread().sleep(5);
+
             } catch (InterruptedException e) {}
         }
     }
-
 }
 
 class Ant {
@@ -55,11 +64,13 @@ class Ant {
     char direction;
     int xPos;
     int yPos;
+    int dim;
 
     public Ant(char d, int dim) {
         direction = d;
         xPos = dim / 2;
         yPos = dim / 2;
+        this.dim = dim;
     }
 
     public void move(Color c) {
@@ -97,19 +108,44 @@ class Ant {
     }
 
     public void moveUp() {
-        yPos += 1;
+
+        if ((yPos - 1) == -1) 
+            yPos = dim-1;
+        else 
+            yPos -= 1;
+
     }
 
     public void moveDown() {
-        yPos -= 1;
+
+        if ((yPos + 1) == dim)
+            yPos = 0;
+        else
+            yPos += 1;
     }
 
     public void moveLeft() {
-        xPos -= 1;
+
+        if ((xPos - 1) == -1)
+            xPos = dim-1;
+        else
+            xPos -= 1;
     }
 
     public void moveRight() {
-        xPos += 1;
+
+        if ((xPos + 1) == dim)
+            xPos = 0;
+        else
+            xPos += 1;
+    }
+
+    public void setXPos(int i) {
+        xPos = i;
+    }
+
+    public void setYPos(int i) {
+        yPos = i;
     }
 
     public int getXPos() {
@@ -126,12 +162,20 @@ class AntGUI extends JFrame {
     private final int SQUARE_SIZE = 10;
     private final int BOTTOM_SPACE = 30;
     private int boardDim;
+    Main m;
 
-    private JTextField[][] squares;
+    JTextField[][] squares;
     JPanel boardPanel;
-//    JPanel bottomPanel;
+    JPanel bottomPanel;
+    JPanel topPanel;
+    private JButton start;
+    private JButton stop;
+    private JButton nextStep;
+    private JButton reset;
+
 
     public AntGUI(int dim) {
+        m = new Main(this, dim);
         boardDim = dim;
         squares = new JTextField[boardDim][boardDim];
         setPreferredSize(new Dimension(boardDim * SQUARE_SIZE,
@@ -140,10 +184,12 @@ class AntGUI extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         boardPanel = createBoard();
-//        bottomPanel = createBottomPanel();
+        bottomPanel = createBottomPanel();
+        topPanel = createTopPanel();
 
         getContentPane().add(boardPanel, BorderLayout.CENTER);
-//        getContentPane().add(bottomPanel, BorderLayout.SOUTH);
+        getContentPane().add(bottomPanel, BorderLayout.SOUTH);
+        getContentPane().add(topPanel, BorderLayout.NORTH);
         pack();
         setVisible(true);
     }
@@ -171,18 +217,75 @@ class AntGUI extends JFrame {
         return boardPanel;
     }
 
-    public void updateSquareColor(int i, int j) {
+    private JPanel createBottomPanel() {
 
-        if (squares[i][j].getBackground() == Color.BLACK) 
-            squares[i][j].setBackground(Color.WHITE);
-        else if (squares[i][j].getBackground() == Color.WHITE)
+        JPanel bottomPanel = new JPanel();
+        JLabel steps = new JLabel("Steps");
+        bottomPanel.setLayout(new GridLayout(1,0));
+        bottomPanel.add(steps);
+        return bottomPanel;
+
+    }
+
+    private JPanel createTopPanel() {
+        //TODO Add actionlistener
+        JPanel topPanel = new JPanel();
+        topPanel.setBorder(BorderFactory.createTitledBorder
+                (BorderFactory.createEtchedBorder(), "Options"));
+        topPanel.setLayout(new GridLayout(1, 0));
+        start = new JButton("Start");
+        stop = new JButton("Stop");
+        nextStep = new JButton("Next step");
+        reset = new JButton("Reset");
+        ActionListener listener = new ButtonListener();
+        stop.addActionListener(listener);
+        start.addActionListener(listener);
+        nextStep.addActionListener(listener);
+        reset.addActionListener(listener);
+        topPanel.add(start);
+        topPanel.add(stop);
+        topPanel.add(nextStep);
+        topPanel.add(reset);
+
+        return topPanel;
+    }
+
+    public void updateSquareColor(int i, int j, Color c) {
+
+        if (c == Color.WHITE)
             squares[i][j].setBackground(Color.BLACK);
+        else if (c == Color.BLACK)
+            squares[i][j].setBackground(Color.WHITE);
 
         repaint();
+    }
 
+    public void setTempColor(int i, int j) {
+        squares[i][j].setBackground(Color.RED);
+        repaint();
     }
 
     public Color getSquareColor(int i, int j) {
         return squares[i][j].getBackground();
+    }
+
+    class ButtonListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            if (e.getSource() == start) {
+                new Thread(new Runnable() {
+                    public void run() {
+                        start.setEnabled(false);
+                        m.startAnt();
+                    }
+                }).start();
+
+            } else if (e.getSource() == stop) {
+                System.out.println("stop");
+            } else if (e.getSource() == nextStep) {
+                System.out.println("Next step");
+            } else if (e.getSource() == reset) {
+                System.out.println("reset");
+            }
+        }
     }
 }
