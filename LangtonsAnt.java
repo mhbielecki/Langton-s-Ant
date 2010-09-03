@@ -11,25 +11,41 @@ import java.awt.event.*;
 public class LangtonsAnt {
     public static void main(String[] args) {
 
-        new AntGUI(20);
-        Ant a = new Ant('u');
+
         Main m = new Main();
-        m.start(a);
+        m.start();
     }
 }
 
 class Main {
 
-    Ant a;
+    int dim = 20;
+    AntGUI g = new AntGUI(dim);
+    Ant a = new Ant('u');
+
 
     public void start() {
-        this.a = a;
+
+        
+//            try {
+//                for (int i = 0; i < dim; i++) {
+//                    for (int j = 0; j < dim; j++) {
+//                        g.updateSquareColor(i, j);
+//                        Thread.currentThread().sleep(10);
+//                    }
+//                }
+//            } catch (InterruptedException e) {}
+        
+
     }
 
-    while(true) {
-        // move ant around
-    }
+
+    //    while(true) {
+    //        // move ant around
+    //        // update tile color
+    //    }
 }
+
 class Ant {
 
 
@@ -39,13 +55,13 @@ class Ant {
         direction = d;
     }
 
-    public void move() {
-        if (square == black){
-            square.flipColor(Color.WHITE);
-        } else if (square == white) {
-            square.flipColor(Color.BLACK);
-        }
-    }
+//    public void move() {
+//        if (square == black){
+//            square.flipColor(Color.WHITE);
+//        } else if (square == white) {
+//            square.flipColor(Color.BLACK);
+//        }
+//    }
 
     public void moveUp() {
 
@@ -60,7 +76,7 @@ class Ant {
     }
 
     public void moveRight() {
-        
+
     }
 }
 
@@ -112,5 +128,16 @@ class AntGUI extends JFrame {
             }
         }
         return boardPanel;
+    }
+
+    public void updateSquareColor(int i, int j) {
+
+        if (squares[i][j].getBackground() == Color.BLACK) 
+            squares[i][j].setBackground(Color.WHITE);
+        else if (squares[i][j].getBackground() == Color.WHITE)
+            squares[i][j].setBackground(Color.BLACK);
+
+        repaint();
+
     }
 }
