@@ -6,12 +6,13 @@ import java.awt.event.*;
 
 /**
  * Langton's Ant in Java
+ * TODO Add GUI options (and make the GUI nicer)
+ * TODO Mark curren square red, so it easier to follow the steps
+ * TODO Add step counter
  */
 
 public class LangtonsAnt {
     public static void main(String[] args) {
-
-
         Main m = new Main();
         m.start();
     }
@@ -19,70 +20,110 @@ public class LangtonsAnt {
 
 class Main {
 
-    int dim = 20;
+    int dim = 80;
     AntGUI g = new AntGUI(dim);
-    Ant a = new Ant('u');
-
+    Ant a = new Ant('u', dim);
 
     public void start() {
 
-        
-//            try {
-//                for (int i = 0; i < dim; i++) {
-//                    for (int j = 0; j < dim; j++) {
-//                        g.updateSquareColor(i, j);
-//                        Thread.currentThread().sleep(10);
-//                    }
-//                }
-//            } catch (InterruptedException e) {}
-        
+        //place ant on starting square
+        g.updateSquareColor(a.getXPos(), a.getYPos());
+        Color c;
 
+        /** main loop */
+        while (true) {
+            try {
+                //TODO Get rid of this. Not good practice to catch runtime exceptions
+                try {
+                     c = g.getSquareColor(a.getXPos(), a.getYPos());
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    break;
+                }
+
+                g.updateSquareColor(a.getXPos(), a.getYPos());
+                a.move(c);
+                Thread.currentThread().sleep(5);
+            } catch (InterruptedException e) {}
+        }
     }
 
-
-    //    while(true) {
-    //        // move ant around
-    //        // update tile color
-    //    }
 }
 
 class Ant {
 
 
-    char direction;  //start direction
+    char direction;
+    int xPos;
+    int yPos;
 
-    public Ant(char d) {
+    public Ant(char d, int dim) {
         direction = d;
+        xPos = dim / 2;
+        yPos = dim / 2;
     }
 
-//    public void move() {
-//        if (square == black){
-//            square.flipColor(Color.WHITE);
-//        } else if (square == white) {
-//            square.flipColor(Color.BLACK);
-//        }
-//    }
+    public void move(Color c) {
+
+        //Is it a better way to do this?
+        if (c == Color.WHITE) {
+            if (direction == 'u') {
+                direction = 'r';
+                moveRight();
+            } else if (direction == 'r') {
+                direction = 'd';
+                moveDown();
+            } else if (direction == 'd') {
+                direction = 'l';
+                moveLeft();
+            } else if (direction == 'l') {
+                direction = 'u';
+                moveUp();
+            }
+        } else if (c == Color.BLACK) {
+            if (direction == 'u') {
+                direction = 'l';
+                moveLeft();
+            } else if (direction == 'l') {
+                direction = 'd';
+                moveDown();
+            } else if (direction == 'd') {
+                direction = 'r';
+                moveRight();
+            } else if (direction == 'r') {
+                direction = 'u';
+                moveUp();
+            }
+        }
+    }
 
     public void moveUp() {
-
+        yPos += 1;
     }
 
     public void moveDown() {
-
+        yPos -= 1;
     }
 
     public void moveLeft() {
-
+        xPos -= 1;
     }
 
     public void moveRight() {
+        xPos += 1;
+    }
 
+    public int getXPos() {
+        return xPos;
+    }
+
+    public int getYPos() {
+        return yPos;
     }
 }
 
 class AntGUI extends JFrame {
 
-    private final int SQUARE_SIZE = 30;
+    private final int SQUARE_SIZE = 10;
     private final int BOTTOM_SPACE = 30;
     private int boardDim;
 
@@ -139,5 +180,9 @@ class AntGUI extends JFrame {
 
         repaint();
 
+    }
+
+    public Color getSquareColor(int i, int j) {
+        return squares[i][j].getBackground();
     }
 }
