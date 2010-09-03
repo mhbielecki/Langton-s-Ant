@@ -7,7 +7,7 @@ import java.awt.event.*;
 /**
  * Langton's Ant in Java
  * TODO Add GUI options (and make the GUI nicer)
- * TODO Mark curren square red, so it easier to follow the steps
+ * TODO Mark current square red, so it easier to follow the steps
  * TODO Add step counter
  */
 
@@ -33,7 +33,7 @@ class Main {
         /** main loop */
         while (true) {
             try {
-                //TODO Get rid of this. Not good practice to catch runtime exceptions
+                //TODO Get rid of this. Not good practice to catch runtime exceptions like these
                 try {
                      c = g.getSquareColor(a.getXPos(), a.getYPos());
                 } catch (ArrayIndexOutOfBoundsException e) {
